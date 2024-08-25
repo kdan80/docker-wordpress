@@ -15,5 +15,8 @@ GID=
   
 UID and GID should match that of the user on the host machine.
 
-To start the development environment:
+The entrypoint.sh script should be executable;  
+```chmod +x ./config/entrypoint.sh```
+
+To start the development environment:  
 ```docker-compose up --build```
