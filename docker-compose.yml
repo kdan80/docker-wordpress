@@ -1,0 +1,66 @@
+services:
+
+  database:
+    container_name: wp_db
+    image: mariadb:10.6.4-focal
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - wordpress-network
+    deploy:
+      resources:
+        limits:
+          memory: 2048m
+
+  phpmyadmin:
+    container_name: wp_php
+    depends_on:
+      - database
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    ports: 
+     - 8881:80
+    environment:
+      PMA_HOST: database
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+    networks:
+      - wordpress-network
+
+  wordpress:
+    container_name: wordpress
+    depends_on:
+      - database
+    user: root
+    image: wordpress:latest
+    restart: unless-stopped
+    ports:
+      - 8880:80
+    environment:
+      UID: '${UID}'
+      GID: '${GID}'
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_NAME: '${MYSQL_DATABASE}'
+      WORDPRESS_DB_USER: '${MYSQL_USER}'
+      WORDPRESS_DB_PASSWORD: '${MYSQL_PASSWORD}'
+    entrypoint: /usr/local/bin/entrypoint.sh
+    volumes:
+      - ./src:/var/www/html
+      - ./config/entrypoint.sh:/usr/local/bin/entrypoint.sh
+      - ./config/php.conf.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - wordpress-network
+
+volumes:
+  db-data:
+
+networks:
+  wordpress-network:
+    driver: bridge
